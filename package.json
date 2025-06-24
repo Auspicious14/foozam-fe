@@ -1,0 +1,20 @@
+{
+  "name": "foozam",
+  "description": "A Next.js application for discovering and sharing Nigerian food recipes",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+   
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
+    "typescript": "^5.0.4",
+    "@types/react": "latest"
+  }
+}

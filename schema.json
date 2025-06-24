@@ -1,0 +1,40 @@
+{
+  "title": "Food Schema",
+  "type": "object",
+  "properties": {
+    "dish": {
+      "type": "string",
+      "description": "The name of the dish (e.g., 'Jollof Rice')"
+    },
+    "recipe": {
+      "type": "string",
+      "description": "Instructions on how to prepare the dish"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags associated with the dish (e.g., ['Nigerian', 'gluten-free'])"
+    },
+    "locations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the restaurant or buka"
+          },
+          "city": {
+            "type": "string",
+            "description": "City where the restaurant or buka is located"
+          }
+        },
+        "required": ["name", "city"]
+      },
+      "description": "List of locations where the dish can be found"
+    }
+  },
+  "required": ["dish", "recipe", "tags", "locations"]
+}
