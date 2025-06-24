@@ -1,5 +1,5 @@
 {
-  "name": "foozam",
+  "name": "shazam-for-food-frontend",
   "description": "A Next.js application for discovering and sharing Nigerian food recipes",
   "version": "1.0.0",
   "private": true,
@@ -9,7 +9,12 @@
     "start": "next start"
   },
   "dependencies": {
-   
+    "framer-motion": "^10.16.4",
+    "next": "^13.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-dropzone": "^14.2.3",
+    "tailwindcss": "^3.3.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",
