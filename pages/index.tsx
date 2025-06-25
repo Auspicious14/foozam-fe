@@ -1,5 +1,10 @@
+import Layout from 'modules/layout';
 import Home from '../modules/home/page';
 
 export default function Index() {
-  return <Home />;
+  return (
+    <Layout>
+      <Home />
+    </Layout>
+  );
 }

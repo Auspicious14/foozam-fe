@@ -78,7 +78,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-beige-50 to-green-100 font-poppins flex flex-col items-center py-8">
-      <h1 className="text-4xl font-bold mb-4 text-orange-700 drop-shadow-lg">Shazam for Food</h1>
+      {/* <h1 className="text-4xl font-bold mb-4 text-orange-700 drop-shadow-lg">Shazam for Food</h1> */}
       <PhotoDropzone
         onDrop={(file: File) => handleImageUpload(file)}
         loading={loading}
