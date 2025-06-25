@@ -18,6 +18,8 @@ export default function Home() {
   const [top3, setTop3] = useState<any[]>([]);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
   const handleImageUpload = async (file: File) => {
     setLoading(true);
     setError('');
@@ -28,7 +30,7 @@ export default function Home() {
     formData.append('image', file);
 
     try {
-      const res = await axios.post('/foods/identify', formData, {
+      const res = await axios.post(`${apiUrl}/foods/identify`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       const data = res.data;
@@ -55,7 +57,7 @@ export default function Home() {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get(`/foods/${encodeURIComponent(dish)}${cityParam ? `?city=${encodeURIComponent(cityParam)}` : ''}`);
+      const res = await axios.get(`${apiUrl}/foods/${encodeURIComponent(dish)}${cityParam ? `?city=${encodeURIComponent(cityParam)}` : ''}`);
       const data = res.data;
       if (data.error) setError(data.error);
       else setResult(data);
