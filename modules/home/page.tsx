@@ -78,7 +78,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-beige-50 to-green-100 font-poppins flex flex-col items-center py-8">
       <h1 className="text-4xl font-bold mb-4 text-orange-700 drop-shadow-lg">Shazam for Food</h1>
-      <PhotoDropzone onUpload={handleImageUpload} />
+      <PhotoDropzone
+        onDrop={(file: File) => handleImageUpload(file)}
+        loading={loading}
+      />
       {loading && <Loader />}
       {error && (
         <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded glassmorphism animate-fade-in">
@@ -102,7 +105,7 @@ export default function Home() {
         <div className="w-full max-w-xl mt-6">
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <DietFilter options={DIET_OPTIONS} selected={diet} onChange={setDiet} />
-            <CityFilter options={CITY_OPTIONS} selected={city} onChange={setCity} />
+            <CityFilter cities={CITY_OPTIONS as string[]} selectedCity={city} onCityChange={setCity} />
           </div>
           <ResultCard
             dish={result.dish}

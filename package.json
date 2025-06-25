@@ -9,7 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "framer-motion": "^10.16.4",
+    "framer-motion": "^12.19.1",
     "next": "^13.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -17,9 +17,9 @@
     "tailwindcss": "^3.3.0"
   },
   "devDependencies": {
+    "@types/react": "latest",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.24",
-    "typescript": "^5.0.4",
-    "@types/react": "latest"
+    "typescript": "^5.0.4"
   }
 }
