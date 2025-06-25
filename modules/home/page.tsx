@@ -4,6 +4,7 @@ import ResultCard from '../../components/ResultCard';
 import DietFilter from '../../components/DietFilter';
 import CityFilter from '../../components/CityFilter';
 import Loader from '../../components/Loader';
+import axios from 'axios';
 
 const DIET_OPTIONS = ['vegetarian', 'gluten-free', 'vegan'];
 const CITY_OPTIONS = ['Lagos', 'Abuja', 'Ibadan', 'Ilorin', 'Osun', 'Ogun', 'Oyo', 'Kano', 'Houston', 'London'];
@@ -11,37 +12,37 @@ const CITY_OPTIONS = ['Lagos', 'Abuja', 'Ibadan', 'Ilorin', 'Osun', 'Ogun', 'Oyo
 export default function Home() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [diet, setDiet] = useState('');
-  const [city, setCity] = useState('');
-  const [error, setError] = useState('');
+  const [diet, setDiet] = useState<string>('');
+  const [city, setCity] = useState<string>("");
+  const [error, setError] = useState<string>("");
   const [top3, setTop3] = useState<any[]>([]);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
   const handleImageUpload = async (file: File) => {
     setLoading(true);
     setError('');
     setResult(null);
     setTop3([]);
+    setUploadedImage(URL.createObjectURL(file));
     const formData = new FormData();
     formData.append('image', file);
 
     try {
-      const res = await fetch('/api/foods/identify', {
-        method: 'POST',
-        body: formData,
+      const res = await axios.post('/foods/identify', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const data = await res.json();
+      const data = res.data;
+
       if (data.error) {
         setError(data.error);
-      } else if (data.predictions && data.predictions.length) {
+      } else if (data.message && data.message.includes('Low confidence')) {
         setTop3(data.predictions);
-        setError('Low confidence. Tap a suggestion below or try another photo.');
-      } else if (data.dish) {
-        fetchDishDetails(data.dish);
-      } else if (data.message) {
-        setError(data.message);
-        setTop3(data.predictions || []);
+        setError(data?.message || 'Low confidence. Tap a suggestion below or try another photo.');
       } else {
-        setError('No dish found. Try another photo.');
+        const { topPredictions, ...result } = data;
+        setResult(result);
+        setTop3(topPredictions || []);
+        setError('');
       }
     } catch {
       setError('Invalid image or network error.');
@@ -54,8 +55,8 @@ export default function Home() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/foods/${encodeURIComponent(dish)}${cityParam ? `?city=${encodeURIComponent(cityParam)}` : ''}`);
-      const data = await res.json();
+      const res = await axios.get(`/foods/${encodeURIComponent(dish)}${cityParam ? `?city=${encodeURIComponent(cityParam)}` : ''}`);
+      const data = res.data;
       if (data.error) setError(data.error);
       else setResult(data);
     } catch {
