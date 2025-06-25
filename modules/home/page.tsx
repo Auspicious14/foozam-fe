@@ -1,53 +1,81 @@
-import { useState } from 'react';
-import PhotoDropzone from '../../components/PhotoDropzone';
-import ResultCard from '../../components/ResultCard';
-import DietFilter from '../../components/DietFilter';
-import CityFilter from '../../components/CityFilter';
-import Loader from '../../components/Loader';
-import axios from 'axios';
+import { useState } from "react";
+import PhotoDropzone from "../../components/PhotoDropzone";
+import ResultCard from "../../components/ResultCard";
+import DietFilter from "../../components/DietFilter";
+import CityFilter from "../../components/CityFilter";
+import Loader from "../../components/Loader";
+import axios from "axios";
 
-const DIET_OPTIONS = ['vegetarian', 'gluten-free', 'vegan'];
-const CITY_OPTIONS = ['Lagos', 'Abuja', 'Ibadan', 'Ilorin', 'Osun', 'Ogun', 'Oyo', 'Kano', 'Houston', 'London'];
+const DIET_OPTIONS = ["vegetarian", "gluten-free", "vegan"];
+const CITY_OPTIONS = [
+  "Lagos",
+  "Abuja",
+  "Ibadan",
+  "Ilorin",
+  "Osun",
+  "Ogun",
+  "Oyo",
+  "Kano",
+  "Houston",
+  "London",
+];
 
 export default function Home() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [diet, setDiet] = useState<string>('');
+  const [diet, setDiet] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [top3, setTop3] = useState<any[]>([]);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
   const handleImageUpload = async (file: File) => {
     setLoading(true);
-    setError('');
+    setError("");
     setResult(null);
     setTop3([]);
+    const base64Image = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
     setUploadedImage(URL.createObjectURL(file));
-    const formData = new FormData();
-    formData.append('image', file);
-
+    const payload = {
+      file: {
+        name: file.name,
+        type: file.type,
+        uri: base64Image,
+      },
+    };
     try {
-      const res = await axios.post(`${apiUrl}/foods/identify`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await axios.post(
+        `${apiUrl}/foods/identify`,
+        payload,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       const data = res.data;
 
       if (data.error) {
         setError(data.error);
-      } else if (data.message && data.message.includes('Low confidence')) {
+      } else if (data.message && data.message.includes("Low confidence")) {
         setTop3(data.predictions);
-        setError(data?.message || 'Low confidence. Tap a suggestion below or try another photo.');
+        setError(
+          data?.message ||
+            "Low confidence. Tap a suggestion below or try another photo."
+        );
       } else {
         const { topPredictions, ...result } = data;
         setResult(result);
         setTop3(topPredictions || []);
-        setError('');
+        setError("");
       }
     } catch {
-      setError('Invalid image or network error.');
+      setError("Invalid image or network error.");
     } finally {
       setLoading(false);
     }
@@ -55,28 +83,30 @@ export default function Home() {
 
   const fetchDishDetails = async (dish: string, cityParam?: string) => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
-      const res = await axios.get(`${apiUrl}/foods/${encodeURIComponent(dish)}${cityParam ? `?city=${encodeURIComponent(cityParam)}` : ''}`);
+      const res = await axios.get(
+        `${apiUrl}/foods/${encodeURIComponent(dish)}${
+          cityParam ? `?city=${encodeURIComponent(cityParam)}` : ""
+        }`
+      );
       const data = res.data;
       if (data.error) setError(data.error);
       else setResult(data);
     } catch {
-      setError('Could not fetch dish details.');
+      setError("Could not fetch dish details.");
     } finally {
       setLoading(false);
     }
   };
 
   // Filter locations by city/diet
-  const filteredLocations = result?.locations?.filter(
-    (loc: any) =>
-      (!city || loc.city === city)
-  ) || [];
+  const filteredLocations =
+    result?.locations?.filter((loc: any) => !city || loc.city === city) || [];
 
-  const filteredTags = result?.tags?.filter(
-    (tag: string) => !diet || tag === diet
-  ) || result?.tags;
+  const filteredTags =
+    result?.tags?.filter((tag: string) => !diet || tag === diet) ||
+    result?.tags;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-beige-50 to-green-100 font-poppins flex flex-col items-center py-8">
@@ -99,7 +129,8 @@ export default function Home() {
               className="bg-white/60 backdrop-blur rounded-lg p-3 shadow hover:scale-105 transition-all border border-orange-200"
               onClick={() => fetchDishDetails(pred.dish)}
             >
-              <span className="font-semibold">{pred.dish}</span> ({pred.confidence}%)
+              <span className="font-semibold">{pred.dish}</span> (
+              {pred.confidence}%)
             </button>
           ))}
         </div>
@@ -107,8 +138,16 @@ export default function Home() {
       {result && !error && (
         <div className="w-full max-w-xl mt-6">
           <div className="flex flex-col md:flex-row gap-4 mb-4">
-            <DietFilter options={DIET_OPTIONS} selected={diet} onChange={setDiet} />
-            <CityFilter cities={CITY_OPTIONS as string[]} selectedCity={city} onCityChange={setCity} />
+            <DietFilter
+              options={DIET_OPTIONS}
+              selected={diet}
+              onChange={setDiet}
+            />
+            <CityFilter
+              cities={CITY_OPTIONS as string[]}
+              selectedCity={city}
+              onCityChange={setCity}
+            />
           </div>
           <ResultCard
             dish={result.dish}
