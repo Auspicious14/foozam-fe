@@ -5,6 +5,7 @@ import DietFilter from "../../components/DietFilter";
 import CityFilter from "../../components/CityFilter";
 import Loader from "../../components/Loader";
 import axios from "axios";
+import Image from "next/image";
 
 const DIET_OPTIONS = ["vegetarian", "gluten-free", "vegan"];
 const CITY_OPTIONS = [
@@ -47,8 +48,6 @@ export default function Home() {
     setResult(null);
     setTop3([]);
    
-    setUploadedImage(URL.createObjectURL(file));
-
     const base64Image = await convertImageToBase64(file);
     if (!base64Image) {
       setLoading(false);
@@ -76,6 +75,7 @@ export default function Home() {
         setError(data.error);
       } else if (data.message && data.message.includes("Low confidence")) {
         setTop3(data.predictions);
+        setUploadedImage(data.imageUrl || null);
         setError(
           data?.message ||
             "Low confidence. Tap a suggestion below or try another photo."
@@ -105,8 +105,14 @@ export default function Home() {
       const data = res.data;
       if (data.error) setError(data.error);
       else setResult(data);
-    } catch {
-      setError("Could not fetch dish details.");
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        setError("Dish not found. Try another name.");
+      } else if (error.response?.status === 500) {
+        setError("Could not fetch dish details.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
     } finally {
       setLoading(false);
     }
@@ -131,6 +137,18 @@ export default function Home() {
       {error && (
         <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded glassmorphism animate-fade-in">
           {error}
+        </div>
+      )}
+      {(uploadedImage || result?.imageUrl) && (
+        <div className="w-full flex justify-center mb-6">
+          <Image
+            src={uploadedImage || result?.imageUrl}
+            alt="Uploaded dish"
+            width={320}
+            height={256}
+            className="rounded-xl shadow-lg object-contain bg-white/60 backdrop-blur"
+            style={{ maxWidth: 320, height: "auto" }}
+          />
         </div>
       )}
       {top3.length > 0 && (
