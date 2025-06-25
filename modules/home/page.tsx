@@ -64,7 +64,7 @@ export default function Home() {
     };
     try {
       const res = await axios.post(
-        `${apiUrl}/foods/identify`,
+        `${apiUrl}/foods/identity`,
         payload,
         {
           headers: { "Content-Type": "application/json" },
