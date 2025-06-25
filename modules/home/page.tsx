@@ -31,18 +31,30 @@ export default function Home() {
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-  const handleImageUpload = async (file: File) => {
-    setLoading(true);
-    setError("");
-    setResult(null);
-    setTop3([]);
-    const base64Image = await new Promise<string>((resolve, reject) => {
+
+  const convertImageToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
     });
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setLoading(true);
+    setError("");
+    setResult(null);
+    setTop3([]);
+   
     setUploadedImage(URL.createObjectURL(file));
+
+    const base64Image = await convertImageToBase64(file);
+    if (!base64Image) {
+      setLoading(false);
+      setError("Failed to convert image to base64.");
+      return;
+    }
     const payload = {
       file: {
         name: file.name,
@@ -55,7 +67,7 @@ export default function Home() {
         `${apiUrl}/foods/identify`,
         payload,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { "Content-Type": "application/json" },
         }
       );
       const data = res.data;
