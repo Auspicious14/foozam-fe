@@ -29,9 +29,9 @@ export default function Home() {
   const [error, setError] = useState<string>("");
   const [top3, setTop3] = useState<any[]>([]);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [predictedDish, setPredictedDish] = useState<{ dish: string; confidence: number } | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
 
   const convertImageToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -47,7 +47,7 @@ export default function Home() {
     setError("");
     setResult(null);
     setTop3([]);
-   
+
     const base64Image = await convertImageToBase64(file);
     if (!base64Image) {
       setLoading(false);
@@ -62,13 +62,9 @@ export default function Home() {
       },
     };
     try {
-      const res = await axios.post(
-        `${apiUrl}/foods/identify`,
-        payload,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const res = await axios.post(`${apiUrl}/foods/identify`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
       const data = res.data;
 
       if (data.error) {
@@ -77,8 +73,14 @@ export default function Home() {
         setTop3(data.predictions);
         setUploadedImage(data.imageUrl || null);
         setError(
-          data?.message ||
-            "Low confidence. Tap a suggestion below or try another photo."
+          "Low confidence. Tap a suggestion below or try another photo."
+        );
+      } else if (data.message && data.message.includes("Strong prediction")) {
+        setTop3(data.predictions);
+        setUploadedImage(data.imageUrl || null);
+        setPredictedDish({dish: data.predictedDish,  confidence: data.confidence});
+        setError(
+          "Strong prediction not in dataset. Tap a suggestion below to add it."
         );
       } else {
         const { topPredictions, ...result } = data;
@@ -135,12 +137,12 @@ export default function Home() {
       />
       {loading && <Loader />}
       {error && (
-        <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded glassmorphism animate-fade-in">
+        <div className="my-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded glassmorphism animate-fade-in">
           {error}
         </div>
       )}
       {(uploadedImage || result?.imageUrl) && (
-        <div className="w-full flex justify-center mb-6">
+        <div className="w-full flex flex-col items-center mb-6">
           <Image
             src={uploadedImage || result?.imageUrl}
             alt="Uploaded dish"
@@ -149,15 +151,34 @@ export default function Home() {
             className="rounded-xl shadow-lg object-contain bg-white/60 backdrop-blur"
             style={{ maxWidth: 320, height: "auto" }}
           />
+          {/* {predictedDish && (
+            <div className="mt-4 px-4 py-2 rounded-xl glassmorphism shadow text-center">
+              <span className="block text-orange-700 font-semibold text-lg">
+                Predicted Dish:
+              </span>
+              <span className="block text-2xl font-bold text-green-700 mt-1">
+                {predictedDish.dish}
+              </span>
+              <span className="block text-gray-700 mt-1">
+                Confidence:
+                <span className="font-semibold text-orange-600">
+                  {predictedDish.confidence}%
+                </span>
+              </span>
+            </div>
+          )} */}
         </div>
       )}
       {top3.length > 0 && (
         <div className="flex flex-col gap-2 mt-4 w-full max-w-md">
+          <div className="mt-4 bg-red-100 border border-red-400 text-orange-700 px-4 py-3 rounded glassmorphism animate-fade-in">
+            Top Predictions:
+          </div>
           {top3.map((pred, idx) => (
             <button
               key={pred.dish}
               className="bg-white/60 backdrop-blur rounded-lg p-3 shadow hover:scale-105 transition-all border border-orange-200"
-              onClick={() => fetchDishDetails(pred.dish)}
+              // onClick={() => fetchDishDetails(pred.dish)}
             >
               <span className="font-semibold">{pred.dish}</span> (
               {pred.confidence}%)
@@ -184,6 +205,10 @@ export default function Home() {
             recipe={result.recipe}
             tags={filteredTags}
             locations={filteredLocations}
+            confidence={predictedDish?.confidence || result.confidence}
+            message={result.message}
+            predictedDish={predictedDish?.dish || ""}
+            onAddDish={() => { }}
           />
         </div>
       )}
