@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PhotoDropzone from "../../components/PhotoDropzone";
 import ResultCard from "../../components/ResultCard";
 import DietFilter from "../../components/DietFilter";
@@ -30,6 +30,43 @@ export default function Home() {
   const [top3, setTop3] = useState<any[]>([]);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [predictedDish, setPredictedDish] = useState<{ dish: string; confidence: number } | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [locationError, setLocationError] = useState<string>("");
+  const [dishLocations, setDishLocations] = useState<any[]>([]);
+
+  const fetchLocations = async (dish: string) => {
+    if (!location) return;
+    try {
+      const res = await axios.get(
+        `${apiUrl}/dishes/${encodeURIComponent(dish)}/locations?lat=${
+          location.lat
+        }&lon=${location.lon}`
+      );
+      setDishLocations(res.data);
+    } catch (error) {
+      console.error("Failed to fetch dish locations:", error);
+    }
+  };
+
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          });
+        },
+        (error) => {
+          setLocationError(
+            "Could not get your location. Please enable location services in your browser."
+          );
+        }
+      );
+    } else {
+      setLocationError("Geolocation is not supported by your browser.");
+    }
+  }, []);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -47,49 +84,86 @@ export default function Home() {
     setError("");
     setResult(null);
     setTop3([]);
+    setPredictedDish(null);
+    setUploadedImage(null);
 
-    const base64Image = await convertImageToBase64(file);
-    if (!base64Image) {
-      setLoading(false);
-      setError("Failed to convert image to base64.");
-      return;
-    }
-    const payload = {
-      file: {
-        name: file.name,
-        type: file.type,
-        uri: base64Image,
-      },
-    };
     try {
-      const res = await axios.post(`${apiUrl}/foods/identify`, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const base64Image = await convertImageToBase64(file);
+      const payload = {
+        file: { name: file.name, type: file.type, uri: base64Image },
+      };
+
+      const res = await axios.post(
+        `${apiUrl}/foods/identify${
+          location ? `?lat=${location.lat}&lon=${location.lon}` : ""
+        }`,
+        payload,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
       const data = res.data;
 
+      setUploadedImage(data.imageUrl || null);
+
       if (data.error) {
-        setError(data.error);
-      } else if (data.message && data.message.includes("Low confidence")) {
+        setError(`An error occurred: ${data.error}`);
+      } else if (data.message?.includes("Low confidence")) {
         setTop3(data.predictions);
-        setUploadedImage(data.imageUrl || null);
-        setError(
-          "Low confidence. Tap a suggestion below or try another photo."
-        );
-      } else if (data.message && data.message.includes("Strong prediction")) {
+        setError("We're not quite sure, but here are our best guesses.");
+      } else if (data.message?.includes("Strong prediction")) {
         setTop3(data.predictions);
-        setUploadedImage(data.imageUrl || null);
-        setPredictedDish({dish: data.predictedDish,  confidence: data.confidence});
+        setPredictedDish({
+          dish: data.predictedDish,
+          confidence: data.confidence,
+        });
+        setError("This looks like a new dish! You can add it to our dataset.");
+      } else {
+        setResult(data);
+        setTop3(data.topPredictions || []);
+        setError("");
+        fetchLocations(data.dish);
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
         setError(
-          "Strong prediction not in dataset. Tap a suggestion below to add it."
+          `Error: ${
+            err.response.data.error || "Could not identify the dish."
+          }`
         );
       } else {
-        const { topPredictions, ...result } = data;
-        setResult(result);
-        setTop3(topPredictions || []);
-        setError("");
+        setError(
+          "An unexpected network error occurred. Please check your connection."
+        );
       }
-    } catch {
-      setError("Invalid image or network error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddDish = async () => {
+    if (!predictedDish || !uploadedImage) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await axios.post(`${apiUrl}/foods`, {
+        dishName: predictedDish.dish,
+        imageUrl: uploadedImage,
+        confidence: predictedDish.confidence,
+      });
+      const newDish = {
+        dish: predictedDish.dish,
+        recipe: "This dish has been successfully added to our dataset. Recipe and other details will be available soon.",
+        tags: [],
+        locations: [],
+      };
+      setResult(newDish);
+      setTop3([]);
+      setPredictedDish(null);
+      fetchLocations(newDish.dish);
+    } catch (error) {
+      setError("Failed to add the dish. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -105,15 +179,21 @@ export default function Home() {
         }`
       );
       const data = res.data;
-      if (data.error) setError(data.error);
-      else setResult(data);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        setError("Dish not found. Try another name.");
-      } else if (error.response?.status === 500) {
-        setError("Could not fetch dish details.");
+      if (data.error) {
+        setError(`An error occurred: ${data.error}`);
       } else {
-        setError("An unexpected error occurred.");
+        setResult(data);
+        fetchLocations(data.dish);
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        if (err.response.status === 404) {
+          setError(`Sorry, we couldn't find a dish named "${dish}". Please try another one.`);
+        } else {
+          setError(`Error: ${err.response.data.error || "Could not fetch dish details."}`);
+        }
+      } else {
+        setError("An unexpected network error occurred. Please check your connection.");
       }
     } finally {
       setLoading(false);
@@ -129,20 +209,36 @@ export default function Home() {
     result?.tags;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-beige-50 to-green-100 font-poppins flex flex-col items-center py-8">
-      {/* <h1 className="text-4xl font-bold mb-4 text-orange-700 drop-shadow-lg">Shazam for Food</h1> */}
+    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-beige-50 to-green-100 font-poppins flex flex-col items-center py-8 px-4">
+      <h1 className="text-5xl font-bold mb-6 text-orange-700 drop-shadow-lg text-center">
+        Shazam for Food
+      </h1>
+      <p className="text-center text-gray-600 mb-8 max-w-lg">
+        Discover and share amazing Nigerian food recipes. Just upload a photo
+        of a dish, and we'll tell you all about it!
+      </p>
+
       <PhotoDropzone
         onDrop={(file: File) => handleImageUpload(file)}
         loading={loading}
       />
+
       {loading && <Loader />}
+
+      {locationError && (
+        <div className="my-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-xl glassmorphism animate-fade-in w-full max-w-md text-center">
+          {locationError}
+        </div>
+      )}
+
       {error && (
-        <div className="my-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded glassmorphism animate-fade-in">
+        <div className="my-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl glassmorphism animate-fade-in w-full max-w-md text-center">
           {error}
         </div>
       )}
+
       {(uploadedImage || result?.imageUrl) && (
-        <div className="w-full flex flex-col items-center mb-6">
+        <div className="w-full flex flex-col items-center mb-6 animate-fade-in">
           <Image
             src={uploadedImage || result?.imageUrl}
             alt="Uploaded dish"
@@ -150,45 +246,36 @@ export default function Home() {
             height={256}
             className="rounded-xl shadow-lg object-contain bg-white/60 backdrop-blur"
             style={{ maxWidth: 320, height: "auto" }}
+            priority
           />
-          {/* {predictedDish && (
-            <div className="mt-4 px-4 py-2 rounded-xl glassmorphism shadow text-center">
-              <span className="block text-orange-700 font-semibold text-lg">
-                Predicted Dish:
-              </span>
-              <span className="block text-2xl font-bold text-green-700 mt-1">
-                {predictedDish.dish}
-              </span>
-              <span className="block text-gray-700 mt-1">
-                Confidence:
-                <span className="font-semibold text-orange-600">
-                  {predictedDish.confidence}%
-                </span>
-              </span>
-            </div>
-          )} */}
         </div>
       )}
+
       {top3.length > 0 && (
-        <div className="flex flex-col gap-2 mt-4 w-full max-w-md">
-          <div className="mt-4 bg-red-100 border border-red-400 text-orange-700 px-4 py-3 rounded glassmorphism animate-fade-in">
-            Top Predictions:
-          </div>
-          {top3.map((pred, idx) => (
+        <div className="flex flex-col gap-3 mt-4 w-full max-w-md animate-fade-in">
+          <h3 className="text-xl font-semibold text-center text-orange-700">
+            {error ? "Tap a suggestion" : "Top Predictions"}
+          </h3>
+          {top3.map((pred) => (
             <button
               key={pred.dish}
-              className="bg-white/60 backdrop-blur rounded-lg p-3 shadow hover:scale-105 transition-all border border-orange-200"
-              // onClick={() => fetchDishDetails(pred.dish)}
+              className="bg-white/60 backdrop-blur rounded-lg p-3 shadow hover:scale-105 transition-all border border-orange-200 text-left"
+              onClick={() => fetchDishDetails(pred.dish)}
             >
-              <span className="font-semibold">{pred.dish}</span> (
-              {pred.confidence}%)
+              <span className="font-semibold text-lg text-green-800">
+                {pred.dish}
+              </span>
+              <span className="text-gray-600 ml-2">
+                ({pred.confidence.toFixed(2)}% confidence)
+              </span>
             </button>
           ))}
         </div>
       )}
+
       {result && !error && (
-        <div className="w-full max-w-xl mt-6">
-          <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <div className="w-full max-w-2xl mt-6 animate-fade-in">
+          <div className="flex flex-col md:flex-row gap-4 mb-4 justify-center">
             <DietFilter
               options={DIET_OPTIONS}
               selected={diet}
@@ -204,11 +291,12 @@ export default function Home() {
             dish={result.dish}
             recipe={result.recipe}
             tags={filteredTags}
-            locations={filteredLocations}
+            locations={dishLocations}
+            userLocation={location}
             confidence={predictedDish?.confidence || result.confidence}
             message={result.message}
             predictedDish={predictedDish?.dish || ""}
-            onAddDish={() => { }}
+            onAddDish={handleAddDish}
           />
         </div>
       )}
