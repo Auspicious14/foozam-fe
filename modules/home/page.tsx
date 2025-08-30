@@ -212,7 +212,7 @@ export default function Home() {
       setLoading(false);
     }
   };
-  console.log({ locationError, location });
+  // console.log({ locationError, location });
   // Filter locations by city/diet
   const filteredLocations =
     result?.locations?.filter((loc: any) => !city || loc.city === city) || [];
