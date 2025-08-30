@@ -29,8 +29,13 @@ export default function Home() {
   const [error, setError] = useState<string>("");
   const [top3, setTop3] = useState<any[]>([]);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [predictedDish, setPredictedDish] = useState<{ dish: string; confidence: number } | null>(null);
-  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [predictedDish, setPredictedDish] = useState<{
+    dish: string;
+    confidence: number;
+  } | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(
+    null
+  );
   const [locationError, setLocationError] = useState<string>("");
   const [dishLocations, setDishLocations] = useState<any[]>([]);
 
@@ -58,6 +63,7 @@ export default function Home() {
           });
         },
         (error) => {
+          console.log({ error });
           setLocationError(
             "Could not get your location. Please enable location services in your browser."
           );
@@ -94,7 +100,7 @@ export default function Home() {
       };
 
       const res = await axios.post(
-        `${apiUrl}/foods/identify${
+        `${apiUrl}/dishes/identify${
           location ? `?lat=${location.lat}&lon=${location.lon}` : ""
         }`,
         payload,
@@ -127,9 +133,7 @@ export default function Home() {
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
         setError(
-          `Error: ${
-            err.response.data.error || "Could not identify the dish."
-          }`
+          `Error: ${err.response.data.error || "Could not identify the dish."}`
         );
       } else {
         setError(
@@ -147,14 +151,15 @@ export default function Home() {
     setLoading(true);
     setError("");
     try {
-      await axios.post(`${apiUrl}/foods`, {
+      await axios.post(`${apiUrl}/dishes`, {
         dishName: predictedDish.dish,
         imageUrl: uploadedImage,
         confidence: predictedDish.confidence,
       });
       const newDish = {
         dish: predictedDish.dish,
-        recipe: "This dish has been successfully added to our dataset. Recipe and other details will be available soon.",
+        recipe:
+          "This dish has been successfully added to our dataset. Recipe and other details will be available soon.",
         tags: [],
         locations: [],
       };
@@ -174,7 +179,7 @@ export default function Home() {
     setError("");
     try {
       const res = await axios.get(
-        `${apiUrl}/foods/${encodeURIComponent(dish)}${
+        `${apiUrl}/dishes/${encodeURIComponent(dish)}${
           cityParam ? `?city=${encodeURIComponent(cityParam)}` : ""
         }`
       );
@@ -188,18 +193,26 @@ export default function Home() {
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
         if (err.response.status === 404) {
-          setError(`Sorry, we couldn't find a dish named "${dish}". Please try another one.`);
+          setError(
+            `Sorry, we couldn't find a dish named "${dish}". Please try another one.`
+          );
         } else {
-          setError(`Error: ${err.response.data.error || "Could not fetch dish details."}`);
+          setError(
+            `Error: ${
+              err.response.data.error || "Could not fetch dish details."
+            }`
+          );
         }
       } else {
-        setError("An unexpected network error occurred. Please check your connection.");
+        setError(
+          "An unexpected network error occurred. Please check your connection."
+        );
       }
     } finally {
       setLoading(false);
     }
   };
-
+  console.log({ locationError, location });
   // Filter locations by city/diet
   const filteredLocations =
     result?.locations?.filter((loc: any) => !city || loc.city === city) || [];
@@ -214,8 +227,8 @@ export default function Home() {
         Shazam for Food
       </h1>
       <p className="text-center text-gray-600 mb-8 max-w-lg">
-        Discover and share amazing Nigerian food recipes. Just upload a photo
-        of a dish, and we'll tell you all about it!
+        Discover and share amazing Nigerian food recipes. Just upload a photo of
+        a dish, and we'll tell you all about it!
       </p>
 
       <PhotoDropzone
