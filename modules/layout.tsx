@@ -11,7 +11,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const handleLogin = () => {
     const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:31000";
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
     window.location.href = `${backendUrl}/auth/google`;
   };
 
