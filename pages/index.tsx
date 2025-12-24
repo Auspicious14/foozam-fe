@@ -1,10 +1,10 @@
 import Layout from 'modules/layout';
-import Home from '../modules/home/page';
+import FoodRecognitionPage from '../modules/food-recognition/page';
 
 export default function Index() {
   return (
     <Layout>
-      <Home />
+      <FoodRecognitionPage />
     </Layout>
   );
 }

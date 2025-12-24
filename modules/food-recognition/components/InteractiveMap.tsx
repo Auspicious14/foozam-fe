@@ -1,6 +1,7 @@
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { LatLngExpression } from 'leaflet';
+import React from 'react';
 
 interface Location {
   name: string;
