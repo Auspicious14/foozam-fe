@@ -164,7 +164,7 @@ export default function FoodRecognitionPage() {
 
           {recognition && (
             <div className="animate-fade-in space-y-6 sm:space-y-8">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              {/* <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <DietFilter
                   options={DIET_OPTIONS}
                   selected={diet}
@@ -175,7 +175,7 @@ export default function FoodRecognitionPage() {
                   selectedCity={city}
                   onCityChange={setCity}
                 />
-              </div>
+              </div> */}
 
               <div className="transform transition-all duration-500 hover:translate-y-[-4px]">
                 <ResultCard

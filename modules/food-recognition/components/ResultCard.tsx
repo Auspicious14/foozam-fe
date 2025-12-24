@@ -1,8 +1,9 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import ShareButton from "./ShareButton";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import PlaceDetailsModal from "./PlaceDetailsModal";
 
 const InteractiveMap = dynamic(() => import("./InteractiveMap"), {
   ssr: false,
@@ -14,6 +15,10 @@ interface Location {
   lon: number;
   address?: string;
   distance?: number;
+  rating?: number;
+  priceLevel?: string;
+  phone?: string;
+  website?: string;
 }
 
 interface Props {
@@ -21,7 +26,7 @@ interface Props {
   recipe?: string;
   tags?: string[];
   locations?: Location[];
-  userLocation?: { lat: number; lon: number } | null;
+  userLocation: { lat: number; lon: number } | null;
   message?: string;
   predictedDish?: string;
   confidence?: number;
@@ -53,6 +58,11 @@ const ResultCard: React.FC<Props> = ({
   culturalContext,
   onAddDish,
 }) => {
+  const [showAllPlaces, setShowAllPlaces] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<Location | null>(null);
+
+  const displayedLocations = showAllPlaces ? locations : locations.slice(0, 4);
+
   const showAddDish =
     message &&
     message.toLowerCase().includes("not in dataset") &&
@@ -307,43 +317,90 @@ const ResultCard: React.FC<Props> = ({
                   {locations.length} places found
                 </span>
               </div>
-              <div className="rounded-2xl overflow-hidden shadow-2xl border-4 border-white h-[300px] mb-6">
+              <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white h-[350px] mb-8 group relative">
                 <InteractiveMap
                   locations={locations}
                   userLocation={userLocation}
                 />
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[50] pointer-events-none">
+                  <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg text-xs font-bold text-gray-800 border border-white/50">
+                    Explore the area
+                  </div>
+                </div>
               </div>
 
               {/* Places List */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {locations.slice(0, 6).map((loc, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-3 p-3 bg-white/40 rounded-xl border border-white/40 hover:bg-white/60 transition-colors"
-                  >
-                    <span className="text-lg">🏪</span>
-                    <div className="flex flex-col flex-1">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="text-sm font-bold text-gray-800 line-clamp-1">
-                          {loc.name}
-                        </span>
-                        {loc.distance !== undefined && (
-                          <span className="text-[10px] font-medium text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                            {(loc.distance / 1000).toFixed(1)}km
-                          </span>
-                        )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <AnimatePresence mode="popLayout">
+                  {displayedLocations.map((loc, idx) => (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      key={loc.name + idx}
+                      onClick={() => setSelectedPlace(loc)}
+                      className="flex items-start gap-4 p-4 bg-white/40 rounded-2xl border border-white/40 hover:bg-white/80 hover:shadow-md transition-all cursor-pointer group"
+                    >
+                      <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        🏪
                       </div>
-                      <span className="text-xs text-gray-500 line-clamp-1">
-                        {loc.address || "Nearby location"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="text-sm font-bold text-gray-800 truncate group-hover:text-orange-600 transition-colors">
+                            {loc.name}
+                          </span>
+                          {loc.distance !== undefined && (
+                            <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full whitespace-nowrap border border-orange-100">
+                              {(loc.distance / 1000).toFixed(1)}km
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-500 truncate mt-0.5">
+                          {loc.address || "Nearby location"}
+                        </span>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-[10px] text-gray-400 font-medium">
+                            Click for details
+                          </span>
+                          <span className="text-orange-500 text-[10px]">→</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
+
+              {locations.length > 4 && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    onClick={() => setShowAllPlaces(!showAllPlaces)}
+                    className="group flex items-center gap-2 px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 transition-all shadow-sm"
+                  >
+                    {showAllPlaces
+                      ? "Show Less"
+                      : `See More (${locations.length - 4} more)`}
+                    <span
+                      className={`transition-transform duration-300 ${
+                        showAllPlaces ? "rotate-180" : ""
+                      }`}
+                    >
+                      ↓
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
+
+      <PlaceDetailsModal
+        isOpen={!!selectedPlace}
+        onClose={() => setSelectedPlace(null)}
+        place={selectedPlace}
+        userLocation={userLocation}
+      />
     </motion.div>
   );
 };
