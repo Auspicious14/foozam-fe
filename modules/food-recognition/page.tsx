@@ -182,6 +182,9 @@ export default function FoodRecognitionPage() {
                   dish={recognition.foodName}
                   recipe={recognition.description}
                   tags={recognition.ingredients}
+                  imageUrl={uploadedImage || undefined}
+                  alternativeNames={recognition.alternativeNames}
+                  similarDishes={recognition.similarDishes}
                   origin={recognition.origin}
                   nutritionalInfo={recognition.nutritionalInfo}
                   culturalContext={recognition.culturalContext}
@@ -189,6 +192,8 @@ export default function FoodRecognitionPage() {
                     name: p.name,
                     lat: p.coordinates.latitude,
                     lon: p.coordinates.longitude,
+                    address: p.address,
+                    distance: p.distance,
                   }))}
                   userLocation={
                     location
@@ -202,6 +207,7 @@ export default function FoodRecognitionPage() {
                       ? 70
                       : 40
                   }
+                  confidenceLevel={recognition.confidence as any}
                 />
               </div>
 

@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import ShareButton from "./ShareButton";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 
 const InteractiveMap = dynamic(() => import("./InteractiveMap"), {
   ssr: false,
@@ -11,6 +12,8 @@ interface Location {
   name: string;
   lat: number;
   lon: number;
+  address?: string;
+  distance?: number;
 }
 
 interface Props {
@@ -22,6 +25,10 @@ interface Props {
   message?: string;
   predictedDish?: string;
   confidence?: number;
+  confidenceLevel?: "high" | "medium" | "low";
+  imageUrl?: string;
+  alternativeNames?: string[];
+  similarDishes?: Array<{ name: string; origin: string }>;
   origin?: { country: string; region?: string };
   nutritionalInfo?: { calories?: string; mainNutrients?: string[] };
   culturalContext?: string;
@@ -37,6 +44,10 @@ const ResultCard: React.FC<Props> = ({
   message,
   predictedDish,
   confidence,
+  confidenceLevel,
+  imageUrl,
+  alternativeNames = [],
+  similarDishes = [],
   origin,
   nutritionalInfo,
   culturalContext,
@@ -81,52 +92,124 @@ const ResultCard: React.FC<Props> = ({
       ) : (
         <div className="space-y-8">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
+          <div className="flex flex-col md:flex-row gap-8">
+            {imageUrl && (
+              <div className="w-full md:w-1/3">
+                <div className="relative group">
+                  <Image
+                    src={imageUrl}
+                    alt={dish || "Food"}
+                    width={400}
+                    height={300}
+                    className="w-full h-auto rounded-2xl shadow-lg object-cover border-4 border-white transition-transform duration-300 group-hover:scale-[1.02]"
+                    priority
+                  />
+                  <div className="absolute inset-0 rounded-2xl ring-1 ring-black/10 pointer-events-none" />
+                </div>
+              </div>
+            )}
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-orange-500 bg-orange-50 px-2 py-0.5 rounded">
-                  {origin?.country || "Unknown Origin"}
-                </span>
-                {confidence && (
-                  <span className="text-xs font-bold uppercase tracking-wider text-green-600 bg-green-50 px-2 py-0.5 rounded">
-                    {confidence}% Match
-                  </span>
-                )}
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-                {dish}
-              </h2>
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                {tags.slice(0, 5).map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-lg text-xs font-medium border border-zinc-200"
-                  >
-                    {tag}
-                  </span>
-                ))}
-                {tags.length > 5 && (
-                  <span className="text-xs text-zinc-400 self-center ml-1">
-                    +{tags.length - 5} more
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="w-full sm:w-auto">
-              <ShareButton dishName={dish || ""} />
-            </div>
-          </div>
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-orange-500 bg-orange-50 px-2 py-0.5 rounded">
+                      {origin?.country || "Unknown Origin"}
+                    </span>
+                    {confidence && (
+                      <span
+                        className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                          confidenceLevel === "high"
+                            ? "text-green-600 bg-green-50"
+                            : confidenceLevel === "medium"
+                            ? "text-orange-600 bg-orange-50"
+                            : "text-red-600 bg-red-50"
+                        }`}
+                      >
+                        {confidence}% Match ({confidenceLevel})
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
+                    {dish}
+                  </h2>
 
-          {/* Description Section */}
-          <div className="relative">
-            <div className="absolute -left-4 top-0 bottom-0 w-1 bg-orange-200 rounded-full hidden md:block" />
-            <p className="text-lg text-gray-700 leading-relaxed italic">
-              "{recipe}"
-            </p>
+                  {alternativeNames.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-xs font-medium text-gray-400 uppercase tracking-tighter">
+                        Also known as:
+                      </span>
+                      {alternativeNames.map((alt) => (
+                        <span
+                          key={alt}
+                          className="text-xs font-semibold text-gray-600 italic"
+                        >
+                          {alt}
+                          {alt !== alternativeNames[alternativeNames.length - 1]
+                            ? ","
+                            : ""}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-1.5 mt-4">
+                    {tags.slice(0, 5).map((tag) => (
+                      <span
+                        key={tag}
+                        className="bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-lg text-xs font-medium border border-zinc-200"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {tags.length > 5 && (
+                      <span className="text-xs text-zinc-400 self-center ml-1">
+                        +{tags.length - 5} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="w-full sm:w-auto">
+                  <ShareButton dishName={dish || ""} />
+                </div>
+              </div>
+
+              {/* Description Section (Mobile/Tablet view - inside flex-1) */}
+              <div className="relative mt-6">
+                <div className="absolute -left-4 top-0 bottom-0 w-1 bg-orange-200 rounded-full hidden md:block" />
+                <p className="text-lg text-gray-700 leading-relaxed italic">
+                  "{recipe}"
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Ingredients Section */}
+            <div className="bg-white/50 rounded-2xl p-5 border border-white/50 shadow-sm">
+              <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-4">
+                <span className="p-1.5 bg-orange-100 text-orange-600 rounded-lg text-sm">
+                  🍅
+                </span>
+                Main Ingredients
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-white/80 text-gray-700 px-3 py-1.5 rounded-xl text-sm font-medium border border-zinc-200 shadow-sm"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {tags.length === 0 && (
+                  <span className="text-sm text-gray-400 italic">
+                    Ingredients list not available
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* Dietary / Nutritional Info */}
             <div className="bg-white/50 rounded-2xl p-5 border border-white/50 shadow-sm">
               <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-4">
@@ -172,6 +255,42 @@ const ResultCard: React.FC<Props> = ({
                   "No cultural details available for this dish."}
               </p>
             </div>
+
+            {/* Similar Dishes Section */}
+            <div className="bg-white/50 rounded-2xl p-5 border border-white/50 shadow-sm">
+              <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-4">
+                <span className="p-1.5 bg-purple-100 text-purple-600 rounded-lg text-sm">
+                  🍲
+                </span>
+                Similar Dishes
+              </h3>
+              <div className="space-y-3">
+                {similarDishes.length > 0 ? (
+                  similarDishes.map((dish, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between group"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-gray-800 group-hover:text-orange-600 transition-colors">
+                          {dish.name}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {dish.origin}
+                        </span>
+                      </div>
+                      <span className="text-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        ✨
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-400 italic">
+                    No similar dishes identified
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Location Section */}
@@ -188,11 +307,38 @@ const ResultCard: React.FC<Props> = ({
                   {locations.length} places found
                 </span>
               </div>
-              <div className="rounded-2xl overflow-hidden shadow-2xl border-4 border-white h-[300px]">
+              <div className="rounded-2xl overflow-hidden shadow-2xl border-4 border-white h-[300px] mb-6">
                 <InteractiveMap
                   locations={locations}
                   userLocation={userLocation}
                 />
+              </div>
+
+              {/* Places List */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {locations.slice(0, 6).map((loc, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 p-3 bg-white/40 rounded-xl border border-white/40 hover:bg-white/60 transition-colors"
+                  >
+                    <span className="text-lg">🏪</span>
+                    <div className="flex flex-col flex-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="text-sm font-bold text-gray-800 line-clamp-1">
+                          {loc.name}
+                        </span>
+                        {loc.distance !== undefined && (
+                          <span className="text-[10px] font-medium text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                            {(loc.distance / 1000).toFixed(1)}km
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500 line-clamp-1">
+                        {loc.address || "Nearby location"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
