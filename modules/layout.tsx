@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "./auth/context";
 import Image from "next/image";
+import CookieConsent from "../components/CookieConsent";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
@@ -84,6 +85,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     >
                       My History
                     </Link>
+                    {user.role === "admin" && (
+                      <Link
+                        href="/admin/analytics"
+                        className="block px-4 py-3 text-sm text-orange-600 hover:bg-orange-50 font-bold transition-colors"
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <button
                       onClick={logout}
                       className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 font-bold transition-colors"
@@ -137,6 +146,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </span>
         </div>
       </footer>
+      <CookieConsent />
     </div>
   );
 };

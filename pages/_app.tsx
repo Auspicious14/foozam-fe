@@ -3,6 +3,7 @@ import '../styles/globals.css';
 import 'leaflet/dist/leaflet.css';
 import { AppProvider } from '../context';
 import { AuthProvider } from '../modules/auth/context';
+import { AnalyticsProvider } from '../modules/analytics/context';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -10,11 +11,13 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <AuthProvider>
-        <AppProvider>
-          <Component {...pageProps} />
-        </AppProvider>
-      </AuthProvider>
+      <AnalyticsProvider>
+        <AuthProvider>
+          <AppProvider>
+            <Component {...pageProps} />
+          </AppProvider>
+        </AuthProvider>
+      </AnalyticsProvider>
     </GoogleOAuthProvider>
   );
 }
