@@ -4,28 +4,43 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
+        <title>FooZam | Shazam for Food Discovery</title>
         <meta
           name="description"
-          content="Discover and share amazing Nigerian food recipes. Just upload a photo of a dish, and we'll tell you all about it!"
+          content="Identify any dish in seconds. FooZam uses advanced AI to discover ingredients, nutritional facts, and local spots for your favorite foods."
         />
         <meta
           name="keywords"
-          content="Nigerian food, recipe identifier, food recognition, Shazam for food, African cuisine"
+          content="FooZam, food recognition, AI food identifier, dish recognition, Nigerian food, recipe discovery, food nutritional facts, local restaurants"
         />
-        <meta name="author" content="Shazam for Food" />
-        <link rel="icon" href="/favicon.ico" />
+        <meta name="author" content="FooZam AI" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://foozam.ai/" />
+        <meta property="og:title" content="FooZam | Shazam for Food Discovery" />
+        <meta property="og:description" content="Identify any dish in seconds with FooZam. Advanced AI for the ultimate foodie experience." />
+        <meta property="og:image" content="/logo.png" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://foozam.ai/" />
+        <meta property="twitter:title" content="FooZam | Shazam for Food Discovery" />
+        <meta property="twitter:description" content="Identify any dish in seconds with FooZam. Advanced AI for the ultimate foodie experience." />
+        <meta property="twitter:image" content="/logo.png" />
+
+        <link rel="icon" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
-          rel="stylesheet"
-        />
-        <meta name="theme-color" content="#fb923c" />
+        <meta name="theme-color" content="#FF8A00" />
       </Head>
+
       <body>
         <Main />
         <NextScript />

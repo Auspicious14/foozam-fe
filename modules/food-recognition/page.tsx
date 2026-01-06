@@ -91,49 +91,80 @@ export default function FoodRecognitionPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-beige-50 to-green-100 font-poppins flex flex-col items-center py-6 px-4 sm:py-12 sm:px-6">
-      <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
-        <h1 className="text-4xl sm:text-6xl font-extrabold mb-4 text-orange-700 drop-shadow-lg text-center tracking-tight">
-          Foozam
-        </h1>
-        <p className="text-center text-gray-600 mb-8 sm:mb-12 max-w-lg text-base sm:text-lg leading-relaxed px-2">
-          Discover amazing food! Just upload a photo, and we'll tell you all
-          about it!
-        </p>
-
-        <div className="w-full max-w-md mx-auto mb-8 sm:mb-12">
-          <PhotoDropzone onDrop={handleImageUpload} loading={loading} />
+    <div className="min-h-screen flex flex-col items-center">
+      {/* Hero Section */}
+      <section className="w-full bg-white pt-16 pb-24 px-4 border-b border-gray-50 overflow-hidden relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full -z-10 opacity-30">
+           <div className="absolute top-[-10%] left-[-10%] w-80 h-80 bg-brand-orange/20 blur-[100px] rounded-full animate-pulse-slow"></div>
+           <div className="absolute bottom-[-10%] right-[-10%] w-80 h-80 bg-brand-green/20 blur-[100px] rounded-full"></div>
         </div>
 
+        <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-50 text-brand-orange text-sm font-bold mb-8 animate-fade-in border border-orange-100 shadow-sm">
+             <span className="relative flex h-2 w-2">
+               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-orange opacity-75"></span>
+               <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-orange"></span>
+             </span>
+             Powered by Advanced AI
+          </div>
+          
+          <h1 className="text-5xl sm:text-7xl font-black mb-6 text-brand-dark tracking-tight leading-[1.1]">
+            What's on your <span className="text-brand-orange">plate?</span>
+          </h1>
+          <p className="text-gray-500 text-lg sm:text-xl mb-12 max-w-2xl leading-relaxed font-medium">
+            Discover ingredients, nutritional facts, and local spots for any dish in seconds. Just snap and let FooZam do the magic.
+          </p>
+
+          <div className="w-full max-w-md mx-auto relative group">
+             <div className="absolute -inset-1 bg-gradient-to-r from-brand-orange to-brand-green rounded-[32px] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+             <div className="relative">
+                <PhotoDropzone onDrop={handleImageUpload} loading={loading} />
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content Area */}
+      <div className="w-full max-w-5xl mx-auto py-16 px-6">
         {loading && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/20 backdrop-blur-sm">
-            <Loader />
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white/40 backdrop-blur-md animate-fade-in">
+             <div className="flex flex-col items-center gap-6">
+                <div className="loader w-16 h-16 border-4"></div>
+                <div className="flex flex-col items-center">
+                   <p className="text-2xl font-black text-brand-dark tracking-tight">Analyzing Flavor...</p>
+                   <p className="text-gray-400 font-bold text-sm uppercase tracking-widest mt-2">Checking ingredients & origins</p>
+                </div>
+             </div>
           </div>
         )}
 
-        <div className="w-full max-w-2xl space-y-4 sm:space-y-6">
+        <div className="space-y-12">
           {locationError && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-r-xl shadow-sm animate-fade-in text-sm sm:text-base">
-              <div className="flex items-center">
-                <span className="mr-2">📍</span>
-                {locationError}
-              </div>
-            </div>
+             <div className="bg-amber-50 border border-amber-200 text-amber-900 p-5 rounded-3xl shadow-sm flex items-start gap-4 animate-fade-in">
+                <div className="p-2 bg-white rounded-xl shadow-sm text-xl">📍</div>
+                <div className="flex-1">
+                   <p className="font-bold">Location Access</p>
+                   <p className="text-sm text-amber-800/80 leading-relaxed mt-1">{locationError}</p>
+                </div>
+             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-400 text-red-800 p-4 rounded-r-xl shadow-sm animate-fade-in text-sm sm:text-base">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center">
-                  <span className="mr-2">⚠️</span>
-                  {error}
+            <div className="bg-red-50 border border-red-100 text-red-900 p-6 rounded-3xl shadow-sm animate-fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-4">
+                   <div className="p-2 bg-white rounded-xl shadow-sm text-xl">⚠️</div>
+                   <div>
+                      <p className="font-bold">Oops! Something went wrong</p>
+                      <p className="text-sm text-red-800/80 mt-1">{error}</p>
+                   </div>
                 </div>
                 {lastFile && !loading && (
                   <button
                     onClick={handleRetry}
-                    className="text-xs sm:text-sm font-bold uppercase tracking-wider text-red-600 hover:text-red-700 underline-offset-4 hover:underline transition-all flex items-center"
+                    className="whitespace-nowrap bg-white text-red-600 px-6 py-3 rounded-2xl font-bold text-sm shadow-sm hover:bg-red-50 transition-all flex items-center justify-center gap-2 border border-red-100"
                   >
-                    <span className="mr-1">🔄</span> Retry with image
+                    <span>🔄</span> Retry Scan
                   </button>
                 )}
               </div>
@@ -141,43 +172,29 @@ export default function FoodRecognitionPage() {
           )}
 
           {uploadedImage && !recognition && !loading && (
-            <div className="flex flex-col items-center space-y-4 animate-fade-in py-4">
-              <div className="relative group">
-                <Image
-                  src={uploadedImage}
-                  alt="Uploaded food"
-                  width={400}
-                  height={300}
-                  className="rounded-2xl shadow-2xl object-cover border-4 border-white transition-transform duration-300 group-hover:scale-[1.02]"
-                  style={{ width: "100%", height: "auto", maxWidth: "400px" }}
-                  priority
-                />
-                <div className="absolute inset-0 rounded-2xl ring-1 ring-black/10 pointer-events-none" />
+            <div className="flex flex-col items-center py-12 animate-fade-in">
+              <div className="relative">
+                <div className="absolute -inset-4 bg-brand-orange/10 blur-3xl rounded-full"></div>
+                <div className="relative border-8 border-white shadow-2xl rounded-[40px] overflow-hidden w-full max-w-sm mx-auto transition-transform hover:scale-[1.02] duration-500">
+                  <Image
+                    src={uploadedImage}
+                    alt="Uploaded food"
+                    width={400}
+                    height={400}
+                    className="object-cover w-full h-full aspect-square"
+                    priority
+                  />
+                </div>
               </div>
-              {!error && (
-                <p className="text-gray-500 text-sm font-medium animate-pulse">
-                  Analyzing your delicious discovery...
-                </p>
-              )}
+              <p className="mt-12 text-gray-400 font-bold uppercase tracking-[0.2em] text-xs animate-pulse">
+                Processing Deliciousness...
+              </p>
             </div>
           )}
 
           {recognition && (
-            <div className="animate-fade-in space-y-6 sm:space-y-8">
-              {/* <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                <DietFilter
-                  options={DIET_OPTIONS}
-                  selected={diet}
-                  onChange={setDiet}
-                />
-                <CityFilter
-                  cities={CITY_OPTIONS}
-                  selectedCity={city}
-                  onCityChange={setCity}
-                />
-              </div> */}
-
-              <div className="transform transition-all duration-500 hover:translate-y-[-4px]">
+            <div className="animate-fade-in space-y-12">
+              <div className="transform-gpu">
                 <ResultCard
                   dish={recognition.foodName}
                   recipe={recognition.description}
@@ -211,11 +228,22 @@ export default function FoodRecognitionPage() {
                 />
               </div>
 
-              <div className="bg-white/40 backdrop-blur-md rounded-3xl p-1 shadow-inner">
-                <FeedbackForm
-                  initialFoodName={recognition.foodName}
-                  onSubmit={handleFeedback}
-                />
+              <div className="bg-gray-50 rounded-[40px] p-8 sm:p-12 border border-gray-100 overflow-hidden relative">
+                 <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                    <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
+                       <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+                    </svg>
+                 </div>
+                 <div className="relative max-w-xl">
+                    <h3 className="text-3xl font-black text-brand-dark mb-4 tracking-tight">Help us improve</h3>
+                    <p className="text-gray-500 font-medium mb-8 leading-relaxed">
+                       Is our analysis correct? Your feedback helps FooZam become even more accurate for foodies everywhere.
+                    </p>
+                    <FeedbackForm
+                      initialFoodName={recognition.foodName}
+                      onSubmit={handleFeedback}
+                    />
+                 </div>
               </div>
             </div>
           )}

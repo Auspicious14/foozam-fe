@@ -3,68 +3,29 @@ import { motion } from "framer-motion";
 
 const Loader: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center mt-6">
-      <div className="w-16 h-16 flex items-center justify-center">
+    <div className="flex flex-col items-center justify-center gap-6">
+      <div className="relative w-16 h-16">
+        <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-        >
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <g>
-              <motion.rect
-                x="20"
-                y="6"
-                width="8"
-                height="20"
-                rx="4"
-                fill="#fb923c"
-                initial={{ y: 6 }}
-                animate={{ y: [6, 2, 6] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 1.2,
-                  repeatType: "reverse",
-                }}
-              />
-              <motion.rect
-                x="34"
-                y="22"
-                width="8"
-                height="20"
-                rx="4"
-                fill="#34d399"
-                initial={{ y: 22 }}
-                animate={{ y: [22, 18, 22] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 1.2,
-                  repeatType: "reverse",
-                  delay: 0.3,
-                }}
-              />
-              <motion.rect
-                x="6"
-                y="22"
-                width="8"
-                height="20"
-                rx="4"
-                fill="#fbbf24"
-                initial={{ y: 22 }}
-                animate={{ y: [22, 18, 22] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 1.2,
-                  repeatType: "reverse",
-                  delay: 0.6,
-                }}
-              />
-            </g>
-          </svg>
-        </motion.div>
+           className="absolute inset-0 border-4 border-brand-orange rounded-full"
+           style={{ borderTopColor: 'transparent', borderLeftColor: 'transparent' }}
+           animate={{ rotate: 360 }}
+           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+        />
+        <motion.div
+           className="absolute inset-3 border-4 border-brand-green rounded-full opacity-50"
+           style={{ borderBottomColor: 'transparent', borderRightColor: 'transparent' }}
+           animate={{ rotate: -360 }}
+           transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+        />
       </div>
-      <span className="mt-2 text-orange-700 font-semibold">Tasting…</span>
+      <div className="flex flex-col items-center">
+         <span className="text-brand-dark font-black tracking-widest text-[10px] uppercase">Analyzing Palette</span>
+         <span className="text-gray-400 font-bold text-[8px] uppercase tracking-widest mt-1">Please wait a moment</span>
+      </div>
     </div>
   );
 };
+
 
 export default Loader;
